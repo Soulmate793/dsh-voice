@@ -1,0 +1,9 @@
+# 机器相关路径写在 runtime/config.json（已被 .gitignore 忽略），不随仓库分发。
+# 这里只放跨机器通用的配置；也可以把它们挪到 config.json。
+- insert:
+    - id: voice
+      name: '@local/dsh-voice'
+      config:
+        voice:
+          vectorAlpha: 0.7
+          stateAlpha: 0.9

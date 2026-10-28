@@ -1,0 +1,44 @@
+{
+  "name": "@local/dsh-voice",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local TTS voice with emotion simulation for DeepSeek Harness (IndexTTS2; optional QQ delivery)",
+  "license": "MIT",
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "plugin",
+    "tts",
+    "voice",
+    "indextts2",
+    "emotion",
+    "emotion-simulation",
+    "onebot",
+    "snowluma"
+  ],
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "lib/index.js",
+    "runtime/indextts2_server.py",
+    "runtime/emotion.mjs",
+    "runtime/datadir.mjs",
+    "runtime/config.example.json",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "docs/",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

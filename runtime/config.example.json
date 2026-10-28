@@ -1,0 +1,24 @@
+{
+  "indextts2": {
+    "python": "D:\\index-tts2\\.venv\\Scripts\\python.exe",
+    "root": "D:\\index-tts2",
+    "modelDir": "D:\\index-tts2\\checkpoints",
+    "refAudio": "D:\\index-tts2\\ref\\ref.wav",
+    "port": 8765,
+    "autoStart": true,
+    "startTimeoutMs": 300000,
+    "timeoutMs": 300000,
+    "idleSeconds": 0,
+    "minFreeMb": 2500,
+    "minCommitMb": 5500
+  },
+  "qq": {
+    "baseUrl": "http://127.0.0.1:3000",
+    "token": "<your-onebot-access-token>"
+  },
+  "voice": {
+    "vectorAlpha": 0.7,
+    "stateAlpha": 0.9
+  },
+  "memoryDir": ""
+}

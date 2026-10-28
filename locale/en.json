@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Voice & Emotion Simulation",
+    "description": "Local TTS voice (IndexTTS2) with 8-dim emotion simulation: speak text, inspect and simulate emotional state, optionally deliver the generated voice to QQ/OneBot."
+  }
+}
