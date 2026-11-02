@@ -158,6 +158,8 @@ MIT，见 [LICENSE](LICENSE)。
 4. Call `voice_health`, then `voice_say`.
 5. Optional: set `qq.baseUrl` / `qq.token` to deliver the voice to QQ via SnowLuma/OneBot.
 
+> 详细说明见 [docs/v2-emotion.md](docs/v2-emotion.md)
+
 ## v2.0 更新内容（2026-11）
 
 - **情绪语气档案**：开心 / 撒娇 / 温柔 / 惊讶 / 委屈 各有独立音高、语速、音量曲线
