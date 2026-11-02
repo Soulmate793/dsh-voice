@@ -17,3 +17,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+runtime/voice.config.json
+runtime/config.full.example.json
+runtime/logs/

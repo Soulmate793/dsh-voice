@@ -18,9 +18,9 @@ import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-INDEX_ROOT = os.environ.get("INDEXTTS_ROOT", "")
-MODEL_DIR = os.environ.get("INDEXTTS_MODEL_DIR", "")
-REF_AUDIO = os.environ.get("INDEXTTS_REF", "")
+INDEX_ROOT = os.environ.get("INDEXTTS_ROOT", r"D:\index-tts2")
+MODEL_DIR = os.environ.get("INDEXTTS_MODEL_DIR", r"D:\index-tts2\checkpoints")
+REF_AUDIO = os.environ.get("INDEXTTS_REF", r"D:\index-tts2\ref\ref_keruanshaonv.wav")
 PORT = int(os.environ.get("INDEXTTS_PORT", "8765"))
 IDLE_SECONDS = int(os.environ.get("INDEXTTS_IDLE", "0"))
 MIN_FREE_MB = int(os.environ.get("INDEXTTS_MIN_FREE_MB", "2500"))
@@ -33,7 +33,7 @@ EMOTION_PRESETS = {
     "激动": [0.50, 0, 0, 0, 0, 0, 0.20, 0.30],
     "温柔": [0.30, 0, 0, 0, 0, 0, 0, 0.70],
     "撒娇": [0.35, 0, 0, 0, 0, 0, 0, 0.65],
-    "生气": [0, 0.85, 0, 0, 0, 0, 0, 0.15],
+    "生气": [0, 1.00, 0, 0, 0.20, 0, 0, 0.00],
     "委屈": [0, 0, 0.25, 0, 0, 0.60, 0, 0.15],
     "难过": [0, 0, 0.70, 0, 0, 0.25, 0, 0.05],
     "惊讶": [0.15, 0, 0, 0, 0, 0, 0.60, 0.25],

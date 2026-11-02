@@ -1,9 +1,9 @@
 {
-  "name": "@local/dsh-voice",
-  "version": "1.0.0",
-  "private": true,
+  "name": "dsh-voice",
+  "version": "2.0.0",
+  "private": false,
   "type": "module",
-  "description": "Local TTS voice with emotion simulation for DeepSeek Harness (IndexTTS2; optional QQ delivery)",
+  "description": "IndexTTS2 voice plugin for DeepSeek Harness with emotion tone profiles, PSOLA pitch contour, mood-driven speech, and QQ delivery",
   "license": "MIT",
   "keywords": [
     "deepseek-harness",
@@ -25,10 +25,13 @@
   },
   "files": [
     "lib/index.js",
+    "runtime/say.mjs",
+    "runtime/pitch_contour.py",
     "runtime/indextts2_server.py",
     "runtime/emotion.mjs",
     "runtime/datadir.mjs",
     "runtime/config.example.json",
+    "runtime/config.full.example.json",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",

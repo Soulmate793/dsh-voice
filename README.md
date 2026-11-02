@@ -157,3 +157,39 @@ MIT，见 [LICENSE](LICENSE)。
 3. Copy `runtime/config.example.json` to `runtime/config.json` and fill in your paths.
 4. Call `voice_health`, then `voice_say`.
 5. Optional: set `qq.baseUrl` / `qq.token` to deliver the voice to QQ via SnowLuma/OneBot.
+
+## v2.0 更新内容（2026-11）
+
+- **情绪语气档案**：开心 / 撒娇 / 温柔 / 惊讶 / 委屈 各有独立音高、语速、音量曲线
+- **PSOLA 音高曲线**：只改音高轮廓，不改共振峰/音色（不再"换了个音调"）
+- **伤心双档**：高强度（悲伤 0.6 / 低落 0.35，alpha 0.93）与低中强度（结尾降调 + 音量渐弱 + 轻颤音）
+- **情绪跟随记忆**：不指定 emotion 时自动读取 emotion-state 当前心情并映射语气（stateAlpha 0.4）
+- **语音引擎委派**：`voice_say` 优先调用 runtime/say.mjs，与 CLI 语音模块完全同源
+- **可配置默认值**：speed 1.05、emotionAlphaSad 0.93、stateAlpha 0.4、音量与淡出
+
+### 一键安装
+
+```powershell
+dsh plugin install Soulmate793/dsh-voice
+```
+
+前提：本机已有 IndexTTS2（Python 环境 + checkpoints + 参考音），并在 `runtime/config.json` 填好路径。
+
+### 最小配置
+
+```json
+{
+  "indextts2": {
+    "python": "D:\\index-tts2\\.venv\\Scripts\\python.exe",
+    "root": "D:\\index-tts2",
+    "modelDir": "D:\\index-tts2\\checkpoints",
+    "refAudio": "D:\\index-tts2\\ref\\ref_daniya_15s.wav",
+    "port": 8765,
+    "ffmpegDir": "C:\\Users\\you\\RVC\\ffmpeg",
+    "speed": 1.05,
+    "emotionAlphaSad": 0.93,
+    "stateAlpha": 0.4
+  },
+  "qq": { "baseUrl": "http://127.0.0.1:3000", "token": "<onebot-token>" }
+}
+```

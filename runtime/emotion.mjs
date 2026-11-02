@@ -21,12 +21,18 @@ const SCHEMA = 1;
 const BASELINE = [0.12, 0, 0.03, 0, 0, 0.02, 0, 0.78]; // 基线：略正向、平静
 const EMO_LABELS = ['高兴', '愤怒', '悲伤', '恐惧', '反感', '低落', '惊讶', '平静'];
 const LEX = {
-  pos: ['谢谢', '喜欢', '爱你', '好棒', '厉害', '可爱', '开心', '高兴', '哈哈', '嘿嘿', '太好了', '舒服', '满意', '爱了'],
-  neg: ['烦', '讨厌', '滚', '闭嘴', '傻', '笨', '垃圾', '气死', '恶心', '无语', 'md', '操', '失望', '难过', '伤心', '累', '烦死'],
+  pos: ['谢谢', '喜欢', '爱你', '好棒', '厉害', '可爱', '开心', '高兴', '哈哈', '嘿嘿', '太好了', '舒服', '满意', '爱了', '真棒', '好看'],
+  neg: ['烦', '讨厌', '滚', '闭嘴', '傻', '笨', '垃圾', '气死', '恶心', '无语', 'md', '操', '失望'],
+  // 对方难过/委屈/累——她应该心疼，而不是跟着生气
+  sad: ['难过', '伤心', '哭', '委屈', '失落', 'emo', '低落', '不开心', '心里堵', '想哭', '破防', '难受'],
+  tired: ['累', '疲惫', '困', '没力气', '不想', '没劲', '心累', '撑不住', '好累'],
+  // 直接冲她来的攻击（只有这种才该触发"生气"）
+  hostility: ['滚', '闭嘴', '傻子', '笨蛋', '废物', '讨厌你', '烦死了', '别烦我', '你闭嘴', '垃圾东西'],
   highArousal: ['！', '!', '？？', '！！', '啊啊', '卧槽', '天哪', '真的假的', '居然'],
   lowArousal: ['嗯', '哦', '随便', '都行', '算了', '没事', '行吧'],
-  tired: ['累', '疲惫', '困', '没力气', '不想', '没劲', '心累', '撑不住'],
-  warm: ['乖', '宝贝', '抱抱', '摸摸', '亲亲', '陪你', '我在', '别怕', '晚安'],
+  warm: ['乖', '宝贝', '抱抱', '摸摸', '亲亲', '陪你', '我在', '别怕', '晚安', '想你'],
+  praise: ['夸', '厉害', '牛', '做得很好', '真聪明', '好厉害'],
+  apology: ['对不起', '抱歉', '我错了', '别生气'],
   ask: ['?', '？', '吗', '怎么', '为什么', '啥', '什么', '哪', '多少', '能不能', '可不可以'],
 };
 
@@ -78,56 +84,85 @@ export function inferUserEmotion(text) {
   const t = String(text || '');
   const pos = countMatches(t, LEX.pos);
   const neg = countMatches(t, LEX.neg);
+  const sad = countMatches(t, LEX.sad);
+  const tired = countMatches(t, LEX.tired);
+  const hostility = countMatches(t, LEX.hostility);
+  const warm = countMatches(t, LEX.warm);
+  const praise = countMatches(t, LEX.praise);
+  const apology = countMatches(t, LEX.apology);
+  const ask = countMatches(t, LEX.ask);
   const high = countMatches(t, LEX.highArousal);
   const low = countMatches(t, LEX.lowArousal);
-  const warm = countMatches(t, LEX.warm);
-  const ask = countMatches(t, LEX.ask);
-  const tired = countMatches(t, LEX.tired);
   const lenFactor = Math.min(1, t.length / 40);
 
-  const valence = clamp01((pos + warm * 0.5 - neg) * 0.25 + 0.5);
+  const positive = pos + warm * 0.6 + praise * 0.7 + apology * 0.5;
+  const negative = neg * 0.8 + sad * 1.0 + tired * 0.7 + hostility * 1.2;
+  const valence = clamp01((positive - negative) * 0.18 + 0.5);
   const arousal = clamp01(0.35 + high * 0.18 + (/\?\?|!!/.test(t) ? 0.15 : 0) + lenFactor * 0.2 - low * 0.15);
+
   let label = '平静';
-  if (neg >= 2 && high >= 1) label = '烦躁/生气';
+  if (hostility >= 1) label = '生气/冲着人';
+  else if (sad >= 1) label = '难过/委屈';
   else if (tired >= 1) label = '疲惫/低落';
-  else if (neg >= 1 && low >= 1) label = '低落/失落';
+  else if (neg >= 2 && high >= 1) label = '烦躁/生气';
   else if (neg >= 2) label = '不开心';
-  else if (pos >= 2 || warm >= 2) label = '开心/亲近';
+  else if (positive >= 2) label = '开心/亲近';
   else if (ask >= 2) label = '好奇/在问事';
-  else if (pos >= 1) label = '心情不错';
+  else if (positive >= 1) label = '心情不错';
   else if (low >= 1) label = '有点冷淡/敷衍';
-  return { valence: Math.round(valence * 100) / 100, arousal: Math.round(arousal * 100) / 100, label, pos, neg, warm, ask, tired };
+  return { valence: Math.round(valence * 100) / 100, arousal: Math.round(arousal * 100) / 100, label, pos, neg, sad, tired, hostility, warm, ask };
 }
 
 /** 评价：这件事对我（她）意味着什么 → 情绪增量（8 维，未乘关系系数） */
 export function appraise(text, { affinity = 0.5 } = {}) {
   const t = String(text || '');
   const pos = countMatches(t, LEX.pos);
-  const neg = countMatches(t, LEX.neg);
   const warm = countMatches(t, LEX.warm);
+  const praise = countMatches(t, LEX.praise);
+  const sad = countMatches(t, LEX.sad);
+  const tired = countMatches(t, LEX.tired);
+  const hostility = countMatches(t, LEX.hostility);
+  const apology = countMatches(t, LEX.apology);
   const ask = countMatches(t, LEX.ask);
   const high = countMatches(t, LEX.highArousal);
-  const closeness = 0.4 + 0.6 * clamp01(affinity); // 关系越近，情绪反应越强
+  const closeness = 0.4 + 0.6 * clamp01(affinity);
   const d = [0, 0, 0, 0, 0, 0, 0, 0];
-  if (pos || warm) {
-    d[0] += (pos * 0.2 + warm * 0.25) * closeness;
-    d[7] += 0.1 * closeness;
+
+  // 正向：开心 + 平静上升
+  if (pos || warm || praise) {
+    d[0] += (pos * 0.16 + warm * 0.18 + praise * 0.14) * closeness;
+    d[7] += 0.08 * closeness;
   }
-  if (neg) {
-    d[1] += neg * 0.15 * closeness;
-    d[2] += neg * 0.12 * closeness;
-    d[5] += neg * 0.1 * closeness;
-    d[7] -= 0.1;
+  // 对方难过/累：心疼 → 低落与温柔（不是愤怒）
+  if (sad || tired) {
+    d[5] += (sad * 0.12 + tired * 0.08) * closeness;
+    d[2] += sad * 0.06 * closeness;
+    d[7] += 0.04;
+    // 想哄他，但不把难过误判成高兴
   }
+  // 只有直接冲她来的攻击才生气，而且幅度小
+  if (hostility) {
+    d[1] += hostility * 0.08 * closeness;
+    d[4] += hostility * 0.04;
+    d[5] += hostility * 0.03;
+  }
+  // 道歉：软化
+  if (apology) {
+    d[1] -= 0.06;
+    d[5] -= 0.04;
+    d[0] += 0.05;
+  }
+  // 提问/惊讶
   if (ask) {
-    d[6] += Math.min(0.25, ask * 0.06) * closeness;
-    d[7] += 0.05;
+    d[6] += Math.min(0.12, ask * 0.03) * closeness;
+    d[7] += 0.03;
   }
   if (high) {
-    d[6] += high * 0.05;
-    d[0] += high * 0.05;
+    d[6] += high * 0.03;
+    d[0] += high * 0.03;
   }
-  return d.map((x) => Math.max(-0.5, Math.min(0.5, x)));
+  // 单次评价幅度收窄：情绪是慢慢被影响的
+  return d.map((x) => Math.max(-0.22, Math.min(0.22, x)));
 }
 
 /** 昼夜节律：深夜精力低、更脆；下午偏高 */
@@ -247,4 +282,35 @@ export function tick({ memoryDir, now = Date.now() } = {}) {
   state.self = { vector: self, updatedAt: now };
   saveEmotionState(state, { memoryDir });
   return { self: labelOf(self), vector: self.map((x) => Math.round(x * 100) / 100) };
+}
+
+/** 她主动设定自己当下的情绪（可由语音工具调用） */
+export const SELF_PRESETS = {
+  开心: [0.62, 0, 0, 0, 0, 0, 0, 0.38],
+  兴奋: [0.55, 0, 0, 0, 0, 0, 0.1, 0.25],
+  温柔: [0.35, 0, 0, 0, 0, 0, 0, 0.65],
+  撒娇: [0.45, 0, 0, 0, 0, 0, 0, 0.5],
+  难过: [0, 0, 0.45, 0, 0, 0.35, 0, 0.2],
+  委屈: [0, 0, 0.4, 0, 0, 0.4, 0, 0.2],
+  低落: [0, 0, 0.15, 0, 0, 0.6, 0, 0.25],
+  生气: [0, 0.55, 0, 0, 0.15, 0.1, 0, 0.2],
+  惊讶: [0, 0, 0, 0, 0, 0, 0.55, 0.45],
+  平静: [0.12, 0, 0.03, 0, 0, 0.02, 0, 0.78],
+};
+
+export function setSelfEmotion({ label = '', vector = null, intensity = 1, memoryDir, now = Date.now() }) {
+  const state = loadEmotionState({ memoryDir, now });
+  const base = SELF_PRESETS[String(label || '').trim()] || null;
+  const target = Array.isArray(vector) && vector.length === 8 ? vector.map((x) => clamp01(Number(x) || 0)) : base;
+  if (!target) throw new Error('未知情绪：' + label + '（可用：' + Object.keys(SELF_PRESETS).join('/') + '）');
+  const k = Math.max(0, Math.min(1, Number(intensity) || 1));
+  const current = state.self.vector || BASELINE;
+  state.self.vector = target.map((v, i) => clamp01(current[i] + (v - current[i]) * k));
+  state.self.updatedAt = now;
+  state.history = Array.isArray(state.history) ? state.history : [];
+  state.history.push({ at: now, kind: 'self-set', label: String(label || 'vector') });
+  state.history = state.history.slice(-200);
+  saveEmotionState(state, { memoryDir });
+  const derived = labelOf(state.self.vector);
+  return { ok: true, emotion: String(label || 'vector'), vector: state.self.vector, intensity: derived.intensity, derivedLabel: derived.label };
 }
